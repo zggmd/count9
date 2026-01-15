@@ -1,13 +1,19 @@
 {
-  "name": "数九查询器",
+  "name": "数九 · 日签",
   "short_name": "数九",
-  "start_url": ".",
+  "description": "精确天文冬至 · 数九寒天 · 国风日签",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f4f1ea",
-  "theme_color": "#8b4513",
+  "background_color": "#fbf7ef",
+  "theme_color": "#9a4b18",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2932/2932646.png",
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
