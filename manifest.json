@@ -1,0 +1,15 @@
+{
+  "name": "数九查询器",
+  "short_name": "数九",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#8b4513",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2932/2932646.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
