@@ -4,7 +4,11 @@
     <meta charset="UTF-8" />
     <title>数九 · 日签</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#9a4b18">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <style>
         :root {
             --paper: #fbf7ef;
@@ -343,6 +347,15 @@
   }
 
   init();
+</script>
+<script>
+  /* ================== 【PWA 新增 2】 ================== */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js");
+    });
+  }
+  /* =================================================== */
 </script>
 </body>
 </html>
