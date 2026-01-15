@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数九查询 - 寒随九尽</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8b4513">
+    <script src="https://cdn.staticfile.net/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        /* 替代 Google Fonts，优先调用系统宋体类字体，更具文化感 */
+        body {
+            font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif;
+            background-color: #f7f3ed;
+            color: #2d2d2d;
+        }
+        .chinese-border {
+            border: 4px double #8b4513;
+            position: relative;
+        }
+        /* 模拟宣纸质感 */
+        .card {
+            background-image: radial-gradient(#fffaf0 1px, transparent 0);
+            background-size: 20px 20px;
+            background-color: #fdfaf5;
+            box-shadow: 0 10px 30px rgba(139, 69, 19, 0.1);
+        }
+        .highlight-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="max-w-md w-full card rounded-lg p-6 chinese-border overflow-hidden">
+        <div class="absolute top-2 right-4 opacity-10 text-6xl font-bold select-none">冬至</div>
+        <div class="absolute bottom-2 left-4 opacity-10 text-6xl font-bold select-none">春生</div>
+        
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-extrabold text-amber-900 tracking-widest mb-2">数九计算器</h1>
+            <div class="h-0.5 w-16 bg-amber-800 mx-auto mb-2"></div>
+            <p class="text-xs text-amber-700 opacity-80" id="lunar-info">岁次丙午 腊月小寒</p>
+        </header>
+
+        <main class="text-center">
+            <div class="text-sm text-gray-500 mb-1" id="current-date">2026年1月15日</div>
+            
+            <div class="py-8 my-4 border-t border-b border-amber-200 bg-white bg-opacity-50">
+                <p class="text-xs text-amber-600 mb-2">— 当前处于 —</p>
+                <div id="result-main" class="text-5xl font-bold text-amber-900 my-2">
+                    计算中...
+                </div>
+                <div id="result-sub" class="text-lg text-amber-800 font-medium mt-4 min-h-[1.5rem]">
+                    </div>
+            </div>
+        </main>
+
+        <section class="mt-6">
+            <h2 class="text-sm font-bold text-amber-900 mb-3 flex items-center">
+                <span class="w-1 h-4 bg-amber-800 mr-2"></span>物候志
+            </h2>
+            <div id="jiujiu-song" class="grid grid-cols-3 gap-2 text-xs text-center">
+                </div>
+        </section>
+
+        <footer class="mt-8 pt-4 border-t border-dashed border-gray-300 text-center">
+            <p class="text-[10px] text-gray-400 leading-relaxed">
+                依据传统：冬至当日为“初九”<br>
+                九尽桃花开，共历八十一天
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // 计算冬至日 (简易天文公式适配 2024-2030)
+        function getWinterSolstice(year) {
+            const dates = { 2024: 21, 2025: 21, 2026: 22, 2027: 22, 2028: 21, 2029: 21, 2030: 22 };
+            return new Date(year, 11, dates[year] || 22);
+        }
+
+        function init() {
+            const now = new Date();
+            // 2026年1月15日测试代码: const now = new Date(2026, 0, 15);
+            
+            let year = now.getFullYear();
+            let solstice = getWinterSolstice(year);
+
+            // 如果当前日期在今年冬至之前，需使用去年的冬至作为起点
+            if (now < solstice) {
+                const prevSolstice = getWinterSolstice(year - 1);
+                // 检查是否还在去年冬至开启的81天周期内
+                solstice = prevSolstice;
+            }
+
+            const diffDays = Math.floor((now - solstice) / (1000 * 60 * 60 * 24)) + 1;
+            
+            updateUI(now, diffDays);
+        }
+
+        function updateUI(now, diffDays) {
+            const resultMain = document.getElementById('result-main');
+            const resultSub = document.getElementById('result-sub');
+            const dateDisplay = document.getElementById('current-date');
+            
+            dateDisplay.innerText = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+
+            const lyrics = [
+                "一九二九不出手", "一九二九不出手", 
+                "三九四九冰上走", "三九四九冰上走",
+                "五九六九看杨柳", "五九六九看杨柳", 
+                "七九河开", "八九雁来", 
+                "九九加一九，耕牛遍地走"
+            ];
+
+            if (diffDays < 1) {
+                resultMain.innerText = "候冬至";
+                resultSub.innerText = "冬将至，春可期";
+            } else if (diffDays > 81) {
+                resultMain.innerText = "春已深";
+                resultSub.innerText = "九尽桃花开，耕牛遍地走";
+            } else {
+                const jiuIndex = Math.floor((diffDays - 1) / 9) + 1;
+                const dayIndex = (diffDays - 1) % 9 + 1;
+                const cnNums = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+                
+                resultMain.innerText = `${cnNums[jiuIndex]}九 · 第${dayIndex}天`;
+                resultSub.innerText = `“${lyrics[jiuIndex-1]}”`;
+                
+                renderGrid(jiuIndex);
+            }
+        }
+
+        function renderGrid(activeJiu) {
+            const shortLyrics = ["一九", "二九", "三九", "四九", "五九", "六九", "七九", "八九", "九九"];
+            const container = document.getElementById('jiujiu-song');
+            container.innerHTML = shortLyrics.map((name, i) => {
+                const isPast = (i + 1) < activeJiu;
+                const isNow = (i + 1) === activeJiu;
+                return `
+                    <div class="p-2 border ${isNow ? 'border-amber-600 bg-amber-50 text-amber-900 font-bold' : 'border-gray-100 text-gray-400'} ${isPast ? 'opacity-50' : ''}">
+                        ${name}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        init();
+    </script>
+</body>
+</html>
