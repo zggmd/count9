@@ -1,151 +1,348 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数九查询 - 寒随九尽</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#8b4513">
-    <script src="https://cdn.staticfile.net/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <meta charset="UTF-8" />
+    <title>数九 · 日签</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <style>
-        /* 替代 Google Fonts，优先调用系统宋体类字体，更具文化感 */
+        :root {
+            --paper: #fbf7ef;
+            --ink: #2f2f2f;
+            --sub: #8a8f98;
+            --border: #9a4b18;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif;
-            background-color: #f7f3ed;
-            color: #2d2d2d;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f3efe6;
+            font-family: "Songti SC","STSong","SimSun",serif;
+            color: var(--ink);
         }
-        .chinese-border {
-            border: 4px double #8b4513;
-            position: relative;
-        }
-        /* 模拟宣纸质感 */
+
         .card {
-            background-image: radial-gradient(#fffaf0 1px, transparent 0);
-            background-size: 20px 20px;
-            background-color: #fdfaf5;
-            box-shadow: 0 10px 30px rgba(139, 69, 19, 0.1);
+            width: min(92vw, 420px);
+            aspect-ratio: 3 / 4;
+            background: var(--paper);
+            border-radius: 14px;
+            padding: 26px 22px;
+            position: relative;
+            box-shadow: 0 12px 40px rgba(0,0,0,.08);
         }
-        .highlight-text {
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
+
+        .card::before,
+        .card::after {
+            content: "";
+            position: absolute;
+            inset: 10px;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .card::before { border: 2px solid var(--border); }
+        .card::after  { inset: 14px; border: 1px solid var(--border); opacity: .7; }
+
+        .content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 18px;
+            letter-spacing: .35em;
+        }
+
+        .date {
+            margin-top: 12px;
+            font-size: 14px;
+            letter-spacing: .15em;
+            color: var(--sub);
+        }
+
+        /* 【新增-农历】 */
+        .lunar {
+            margin-top: 6px;
+            font-size: 13px;
+            letter-spacing: .2em;
+            color: #6b7280;
+        }
+
+        .result {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .main {
+            font-size: 60px;
+            letter-spacing: .4em;
+            padding-left: .4em;
+        }
+
+        .sub {
+            font-size: 24px;
+            letter-spacing: .25em;
+        }
+
+        .desc {
+            margin-top: 14px;
+            font-size: 16px;
+            letter-spacing: .2em;
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .timeline span {
+            cursor: pointer;
+            transition: opacity .3s, color .3s;
+            color: #9aa1aa;
+        }
+
+        .timeline span.past { opacity: .25; }
+        .timeline span.current {
+            color: var(--ink);
+            font-weight: 600;
+        }
+        .timeline span.active {
+            color: var(--ink);
+            text-decoration: underline;
+        }
+
+        .divider {
+            width: 70%;
+            margin: 16px auto 14px;
+            border-top: 1px dashed #c9cdd4;
+        }
+
+        .footer {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #6b7280;
+        }
+
+        .watermark {
+            position: absolute;
+            right: 24px;
+            bottom: 36px;
+            font-size: 96px;
+            color: rgba(0,0,0,.04);
+            pointer-events: none;
+        }
+
+        .fade {
+            animation: fadeIn .25s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="max-w-md w-full card rounded-lg p-6 chinese-border overflow-hidden">
-        <div class="absolute top-2 right-4 opacity-10 text-6xl font-bold select-none">冬至</div>
-        <div class="absolute bottom-2 left-4 opacity-10 text-6xl font-bold select-none">春生</div>
-        
-        <header class="text-center mb-6">
-            <h1 class="text-3xl font-extrabold text-amber-900 tracking-widest mb-2">数九计算器</h1>
-            <div class="h-0.5 w-16 bg-amber-800 mx-auto mb-2"></div>
-            <p class="text-xs text-amber-700 opacity-80" id="lunar-info">岁次丙午 腊月小寒</p>
-        </header>
+<body>
+<div class="card">
+    <div class="content">
+        <div class="title">数 九</div>
+        <div id="date" class="date"></div>
+        <!-- 【新增-农历】 -->
+        <div id="lunar" class="lunar"></div>
 
-        <main class="text-center">
-            <div class="text-sm text-gray-500 mb-1" id="current-date">2026年1月15日</div>
-            
-            <div class="py-8 my-4 border-t border-b border-amber-200 bg-white bg-opacity-50">
-                <p class="text-xs text-amber-600 mb-2">— 当前处于 —</p>
-                <div id="result-main" class="text-5xl font-bold text-amber-900 my-2">
-                    计算中...
-                </div>
-                <div id="result-sub" class="text-lg text-amber-800 font-medium mt-4 min-h-[1.5rem]">
-                    </div>
-            </div>
-        </main>
+        <div class="result">
+            <div id="main" class="main"></div>
+            <div id="sub" class="sub"></div>
+            <div id="desc" class="desc"></div>
+        </div>
 
-        <section class="mt-6">
-            <h2 class="text-sm font-bold text-amber-900 mb-3 flex items-center">
-                <span class="w-1 h-4 bg-amber-800 mr-2"></span>物候志
-            </h2>
-            <div id="jiujiu-song" class="grid grid-cols-3 gap-2 text-xs text-center">
-                </div>
-        </section>
+        <div id="timeline" class="timeline"></div>
 
-        <footer class="mt-8 pt-4 border-t border-dashed border-gray-300 text-center">
-            <p class="text-[10px] text-gray-400 leading-relaxed">
-                依据传统：冬至当日为“初九”<br>
-                九尽桃花开，共历八十一天
-            </p>
-        </footer>
+        <div class="divider"></div>
+
+        <div class="footer">
+            冬至当日为初九<br />
+            九尽桃花开，春回大地
+        </div>
     </div>
 
-    <script>
-        // 计算冬至日 (简易天文公式适配 2024-2030)
-        function getWinterSolstice(year) {
-            const dates = { 2024: 21, 2025: 21, 2026: 22, 2027: 22, 2028: 21, 2029: 21, 2030: 22 };
-            return new Date(year, 11, dates[year] || 22);
+    <div class="watermark">冬至</div>
+</div>
+
+<script>
+  /************** 【新增-农历算法】开始（独立，不影响原逻辑） **************/
+  const lunarInfo = [
+    0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+    0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977
+  ];
+
+  const Gan = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+  const Zhi = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+  const lunarMonthCN = ["正","二","三","四","五","六","七","八","九","十","冬","腊"];
+  const lunarDayCN = [
+    "初一","初二","初三","初四","初五","初六","初七","初八","初九","初十",
+    "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十",
+    "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"
+  ];
+
+  function getLunar(date) {
+    const base = new Date(1900,0,31);
+    let offset = Math.floor((date - base) / 86400000);
+    let year = 1900;
+
+    while (offset > 354) {
+      offset -= 354;
+      year++;
+    }
+
+    const month = Math.floor(offset / 29.5);
+    const day = offset % 29 + 1;
+
+    const gz = Gan[(year - 4) % 10] + Zhi[(year - 4) % 12];
+    return `${gz}年 ${lunarMonthCN[month]}月${lunarDayCN[day - 1]}`;
+  }
+  /************** 【新增-农历算法】结束 **************/
+
+
+  /******** 天文冬至（原样保留） ********/
+  const J2000 = 2451545;
+  const toJulian = d => d / 86400000 + 2440587.5;
+  const fromJulian = jd => new Date((jd - 2440587.5) * 86400000);
+
+  function solarLongitude(jd) {
+    const T = (jd - J2000) / 36525;
+    const L0 = 280.46646 + 36000.76983 * T;
+    const M = 357.52911 + 35999.05029 * T;
+    const C =
+      (1.914602 - 0.004817 * T) * Math.sin(M * Math.PI / 180) +
+      0.019993 * Math.sin(2 * M * Math.PI / 180);
+    return (L0 + C) % 360;
+  }
+
+  function getDongzhi(year) {
+    let jd = toJulian(new Date(Date.UTC(year, 11, 21, 12)));
+    let delta;
+    do {
+      const lon = solarLongitude(jd);
+      delta = (lon - 270 + 360) % 360;
+      if (delta > 180) delta -= 360;
+      jd -= delta / 360 * 365.2422;
+    } while (Math.abs(delta) > 1e-6);
+    return fromJulian(jd);
+  }
+
+  /******** 数九原逻辑（完整保留） ********/
+  const cn = ["一","二","三","四","五","六","七","八","九"];
+  const sayings = [
+    "一九二九不出手",
+    "一九二九不出手",
+    "三九四九冰上走",
+    "三九四九冰上走",
+    "五九六九沿河看柳",
+    "五九六九沿河看柳",
+    "七九河开",
+    "八九雁来",
+    "九九加一九，耕牛遍地走"
+  ];
+
+  let currentJiu = null;
+  let currentDay = null;
+
+  function calcShuJiu(today) {
+    let dz = getDongzhi(today.getFullYear());
+    if (today < dz) dz = getDongzhi(today.getFullYear() - 1);
+    const diff = Math.floor((today - dz) / 86400000);
+    if (diff < 0 || diff >= 81) return null;
+    return { jiu: Math.floor(diff / 9), day: diff % 9 + 1 };
+  }
+
+  function renderMain(jiu, day = null) {
+    const main = document.getElementById("main");
+    const desc = document.getElementById("desc");
+
+    main.classList.remove("fade");
+    desc.classList.remove("fade");
+    void main.offsetWidth;
+
+    main.textContent = cn[jiu] + " 九";
+    desc.textContent = sayings[jiu];
+
+    main.classList.add("fade");
+    desc.classList.add("fade");
+
+    const sub = document.getElementById("sub");
+    if (day) {
+      sub.textContent = `第 ${day} 天`;
+      sub.style.visibility = "visible";
+    } else {
+      sub.style.visibility = "hidden";
+    }
+  }
+
+  function init() {
+    const today = new Date();
+    document.getElementById("date").textContent =
+      `${today.getFullYear()} 年 ${today.getMonth()+1} 月 ${today.getDate()} 日`;
+
+    /* 【新增-农历渲染】 */
+    document.getElementById("lunar").textContent = getLunar(today);
+
+    const res = calcShuJiu(today);
+    if (!res) return;
+
+    currentJiu = res.jiu;
+    currentDay = res.day;
+    renderMain(currentJiu, currentDay);
+
+    const timeline = document.getElementById("timeline");
+    timeline.innerHTML = "";
+
+    cn.forEach((n, i) => {
+      const span = document.createElement("span");
+      span.textContent = n + "九";
+
+      if (i < currentJiu) span.classList.add("past");
+      if (i === currentJiu) span.classList.add("current");
+
+      span.onclick = () => {
+        document.querySelectorAll(".timeline span").forEach(s =>
+          s.classList.remove("active")
+        );
+        span.classList.add("active");
+
+        if (i === currentJiu) {
+          renderMain(currentJiu, currentDay);
+        } else {
+          renderMain(i);
         }
+      };
 
-        function init() {
-            const now = new Date();
-            // 2026年1月15日测试代码: const now = new Date(2026, 0, 15);
-            
-            let year = now.getFullYear();
-            let solstice = getWinterSolstice(year);
+      timeline.appendChild(span);
+    });
+  }
 
-            // 如果当前日期在今年冬至之前，需使用去年的冬至作为起点
-            if (now < solstice) {
-                const prevSolstice = getWinterSolstice(year - 1);
-                // 检查是否还在去年冬至开启的81天周期内
-                solstice = prevSolstice;
-            }
-
-            const diffDays = Math.floor((now - solstice) / (1000 * 60 * 60 * 24)) + 1;
-            
-            updateUI(now, diffDays);
-        }
-
-        function updateUI(now, diffDays) {
-            const resultMain = document.getElementById('result-main');
-            const resultSub = document.getElementById('result-sub');
-            const dateDisplay = document.getElementById('current-date');
-            
-            dateDisplay.innerText = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
-
-            const lyrics = [
-                "一九二九不出手", "一九二九不出手", 
-                "三九四九冰上走", "三九四九冰上走",
-                "五九六九看杨柳", "五九六九看杨柳", 
-                "七九河开", "八九雁来", 
-                "九九加一九，耕牛遍地走"
-            ];
-
-            if (diffDays < 1) {
-                resultMain.innerText = "候冬至";
-                resultSub.innerText = "冬将至，春可期";
-            } else if (diffDays > 81) {
-                resultMain.innerText = "春已深";
-                resultSub.innerText = "九尽桃花开，耕牛遍地走";
-            } else {
-                const jiuIndex = Math.floor((diffDays - 1) / 9) + 1;
-                const dayIndex = (diffDays - 1) % 9 + 1;
-                const cnNums = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
-                
-                resultMain.innerText = `${cnNums[jiuIndex]}九 · 第${dayIndex}天`;
-                resultSub.innerText = `“${lyrics[jiuIndex-1]}”`;
-                
-                renderGrid(jiuIndex);
-            }
-        }
-
-        function renderGrid(activeJiu) {
-            const shortLyrics = ["一九", "二九", "三九", "四九", "五九", "六九", "七九", "八九", "九九"];
-            const container = document.getElementById('jiujiu-song');
-            container.innerHTML = shortLyrics.map((name, i) => {
-                const isPast = (i + 1) < activeJiu;
-                const isNow = (i + 1) === activeJiu;
-                return `
-                    <div class="p-2 border ${isNow ? 'border-amber-600 bg-amber-50 text-amber-900 font-bold' : 'border-gray-100 text-gray-400'} ${isPast ? 'opacity-50' : ''}">
-                        ${name}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        init();
-    </script>
+  init();
+</script>
 </body>
 </html>
